@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "onelap2strava"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convert GCJ-02 coordinates in FIT activities and upload them to Strava."
 readme = "README.md"
 requires-python = ">=3.11"

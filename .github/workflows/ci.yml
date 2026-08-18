@@ -2,10 +2,15 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -48,3 +53,45 @@ jobs:
           python -m pip install build twine
           python -m build
           python -m twine check dist/*
+          VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          python scripts/prepare_release.py --version "$VERSION" --dist-dir dist --output-dir release
+          python -m venv /tmp/onelap2strava-wheel
+          /tmp/onelap2strava-wheel/bin/python -m pip install "onelap2strava[bot,strava] @ file://$PWD/dist/onelap2strava-$VERSION-py3-none-any.whl"
+          test "$(/tmp/onelap2strava-wheel/bin/onelap2strava --version)" = "$VERSION"
+
+  container:
+    needs: [test, package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Build and exercise the container
+        run: |
+          python -m pip install -e .
+          smoke_dir="$RUNNER_TEMP/onelap2strava-smoke"
+          mkdir -p "$smoke_dir"
+          SMOKE_DIR="$smoke_dir" python -c 'import os; from pathlib import Path; from tests.fit_factory import make_fit; Path(os.environ["SMOKE_DIR"], "input.fit").write_bytes(make_fit())'
+          chmod 0777 "$smoke_dir"
+          VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          IMAGE="onelap2strava:$VERSION-test"
+          docker build --build-arg VERSION="$VERSION" --tag "$IMAGE" .
+          test "$(docker run --rm "$IMAGE" --version)" = "$VERSION"
+          docker run --rm \
+            --mount "type=bind,src=$smoke_dir,dst=/work" \
+            "$IMAGE" convert /work/input.fit --output /work/output.fit
+          test -s "$smoke_dir/output.fit"
+          VOLUME="onelap2strava-ci-$GITHUB_RUN_ID"
+          docker volume create "$VOLUME"
+          trap 'docker volume rm "$VOLUME" >/dev/null 2>&1 || true' EXIT
+          docker run --rm --mount "type=volume,src=$VOLUME,dst=/data" --entrypoint sh "$IMAGE" \
+            -c 'test "$(id -u)" = 10001 && test -w /data && touch /data/write-test && rm /data/write-test'
+          docker volume rm "$VOLUME"
+          trap - EXIT
+          cp .env.example .env
+          docker compose config --quiet
+          rm .env

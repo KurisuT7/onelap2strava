@@ -35,3 +35,15 @@ entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md) for user-visible behavi
 configuration, or compatibility changes; omit internal-only changes.
 
 By contributing, you agree that your contribution is licensed under the MIT License.
+
+## Releases
+
+Release only from a clean commit on `main` after CI succeeds. Update the version in `pyproject.toml`,
+move the user-visible changelog entries into a dated version section, and update both maintained
+languages and the fixed image tag in `compose.yaml` together.
+
+Create and push one annotated `vMAJOR.MINOR.PATCH` tag. The Release workflow reruns the full checks,
+builds the wheel, source distribution, Compose bundle, checksums, and multi-platform container image,
+then creates a Draft GitHub Release. Inspect its tag target, notes, assets, checksums, image digest,
+anonymous image pull, clean installation, and first documented result before publishing the draft.
+Never move a published version tag; issue a new patch version when a release is wrong.

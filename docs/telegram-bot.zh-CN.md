@@ -10,7 +10,7 @@ Compose；文末也提供不使用 Docker 的原生 Python 方式。
 你需要：
 
 - 一个 Telegram 账号；
-- 一台已安装 Git、Docker 和 Docker Compose 的主机；
+- 一台已安装 `curl`、`unzip`、Docker Engine 和 Docker Compose v2 插件的 Linux 主机；
 - 一个已确认使用 GCJ-02 坐标的 FIT 运动记录，用于最终测试；
 - 可选：用于自动上传的 Strava 账号和 API Application。
 
@@ -50,12 +50,16 @@ Telegram 官方也在 [BotFather 教程](https://core.telegram.org/bots/tutorial
 
 ## 3. 下载并配置 onelap2strava
 
-在部署主机上克隆仓库：
+在部署主机上下载并解压 `v0.2.0` Compose 部署包：
 
 ```bash
-git clone https://github.com/KurisuT7/onelap2strava.git
-cd onelap2strava
+curl -fLO https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-compose.zip
+unzip onelap2strava-0.2.0-compose.zip
+cd onelap2strava-0.2.0-compose
 ```
+
+部署包中包含固定版本的 Compose 文件、空配置示例、文档和许可证。它会拉取预构建镜像，主机
+不再从源码构建项目。
 
 创建私有环境文件：
 
@@ -82,10 +86,10 @@ TELEGRAM_SEND_CONVERTED=false
 
 ## 4. 首次启动 Bot
 
-构建镜像并启动一个长轮询实例：
+拉取固定版本镜像并启动一个长轮询实例：
 
 ```bash
-docker compose build --pull
+docker compose pull
 docker compose up -d
 ```
 
@@ -189,13 +193,9 @@ docker compose logs --tail=100 bot
 docker compose up -d --force-recreate
 ```
 
-更新到仓库中最新的已提交版本：
-
-```bash
-git pull --ff-only
-docker compose build --pull
-docker compose up -d
-```
+升级时，下载并解压新版本的 Compose 部署包，把原目录中的 `.env` 复制到新目录，然后在新目录
+执行 `docker compose pull` 和 `docker compose up -d`。Compose 项目名保持固定，因此会继续使用
+原来的 `bot-data` 数据卷。升级前先阅读 Changelog，升级后重新执行一次转换验证。
 
 停止 Bot，但保留授权信息和轮询状态：
 
@@ -247,7 +247,7 @@ docker compose down
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install -e ".[bot]"
+python -m pip install "onelap2strava[bot,strava] @ https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl"
 export TELEGRAM_BOT_TOKEN=你的_TOKEN
 export TELEGRAM_ALLOWED_USER_IDS=你的纯数字用户_ID
 onelap2strava bot

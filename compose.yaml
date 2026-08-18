@@ -1,6 +1,8 @@
+name: onelap2strava
+
 services:
   bot:
-    build: .
+    image: ghcr.io/kurisut7/onelap2strava:0.2.0
     restart: unless-stopped
     env_file: .env
     volumes:

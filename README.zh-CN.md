@@ -20,15 +20,17 @@
 
 ## 安装
 
-需要 Python 3.11 或更高版本。
+需要 Python 3.11 或更高版本。直接安装 `v0.2.0` Release 中的通用 wheel，不需要 Git，也不需要
+在本机编译。
 
 ```bash
-git clone https://github.com/KurisuT7/onelap2strava.git
-cd onelap2strava
 python -m venv .venv
-. .venv/bin/activate             # Windows: .venv\Scripts\activate
-python -m pip install -e .
+. .venv/bin/activate             # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl
+onelap2strava --version
 ```
+
+最后一条命令应输出 `0.2.0`。源码安装和开发检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 本地转换：
 
@@ -44,7 +46,7 @@ onelap2strava convert activity.fit
 安装 Strava 可选依赖：
 
 ```bash
-python -m pip install -e ".[strava]"
+python -m pip install "onelap2strava[strava] @ https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl"
 ```
 
 在 [Strava](https://www.strava.com/settings/api) 创建 API Application，将 Authorization
@@ -74,8 +76,9 @@ Bot 只接受白名单用户发送的 FIT 文件。主机已完成 Strava 授权
 - [Telegram Bot 部署指南](docs/telegram-bot.zh-CN.md)
 - [Telegram bot deployment guide](docs/telegram-bot.md)
 
-Docker 容器以非 root 用户运行，根文件系统只读，移除全部 Linux capabilities，并使用具名
-数据卷保存配置和轮询状态。白名单为空时，Bot 不处理任何文件，只响应 `/whoami`。
+推荐方式从 GitHub Releases 下载 Compose 部署包，并拉取对应版本的 Linux AMD64 或 ARM64
+预构建镜像。容器以非 root 用户运行，根文件系统只读，移除全部 Linux capabilities，并使用
+具名数据卷保存配置和轮询状态。白名单为空时，Bot 不处理任何文件，只响应 `/whoami`。
 
 ## 支持范围
 
