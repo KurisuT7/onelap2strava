@@ -21,15 +21,18 @@ Strava upload uses its documented [OAuth](https://developers.strava.com/docs/aut
 
 ## Install
 
-Python 3.11 or newer is required.
+Python 3.11 or newer is required. Install the universal wheel from the `v0.2.0` Release; Git and a
+local build are not required.
 
 ```bash
-git clone https://github.com/KurisuT7/onelap2strava.git
-cd onelap2strava
 python -m venv .venv
-. .venv/bin/activate             # Windows: .venv\Scripts\activate
-python -m pip install -e .
+. .venv/bin/activate             # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl
+onelap2strava --version
 ```
+
+The final command should print `0.2.0`. Source installation and development checks are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 Convert a file locally:
 
@@ -46,7 +49,7 @@ machine-readable conversion statistics.
 Install the Strava extra:
 
 ```bash
-python -m pip install -e ".[strava]"
+python -m pip install "onelap2strava[strava] @ https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl"
 ```
 
 Create a [Strava API application](https://www.strava.com/settings/api) and set its authorization
@@ -77,9 +80,10 @@ troubleshooting:
 - [Telegram bot deployment guide](docs/telegram-bot.md)
 - [Telegram Bot 部署指南](docs/telegram-bot.zh-CN.md)
 
-The Docker container runs as a non-root user with a read-only root filesystem, no Linux
-capabilities, and a persistent named volume for configuration and polling state. A missing
-allowlist authorizes no file uploads; only `/whoami` responds.
+The recommended path downloads the Compose bundle from GitHub Releases and pulls the matching
+prebuilt Linux AMD64 or ARM64 image. The container runs as a non-root user with a read-only root
+filesystem, no Linux capabilities, and a persistent named volume for configuration and polling
+state. A missing allowlist authorizes no file uploads; only `/whoami` responds.
 
 ## Scope and limitations
 

@@ -10,7 +10,7 @@ the recommended deployment. The native Python option is covered at the end.
 You need:
 
 - a Telegram account;
-- a host with Git, Docker, and Docker Compose;
+- a Linux host with `curl`, `unzip`, Docker Engine, and the Docker Compose v2 plugin;
 - a FIT activity known to use GCJ-02 coordinates for the final test;
 - optionally, a Strava account and API application for automatic upload.
 
@@ -51,12 +51,16 @@ Telegram documents the same creation flow in its
 
 ## 3. Download and configure onelap2strava
 
-Clone the repository on the deployment host:
+Download and extract the `v0.2.0` Compose bundle on the deployment host:
 
 ```bash
-git clone https://github.com/KurisuT7/onelap2strava.git
-cd onelap2strava
+curl -fLO https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-compose.zip
+unzip onelap2strava-0.2.0-compose.zip
+cd onelap2strava-0.2.0-compose
 ```
+
+The bundle contains the versioned Compose file, empty configuration example, documentation, and
+license. It pulls a prebuilt image, so the host does not build the project from source.
 
 Create the private environment file:
 
@@ -84,10 +88,10 @@ TELEGRAM_SEND_CONVERTED=false
 
 ## 4. Start the bot for the first time
 
-Build and start one long-polling bot instance:
+Pull the fixed-version image and start one long-polling bot instance:
 
 ```bash
-docker compose build --pull
+docker compose pull
 docker compose up -d
 ```
 
@@ -195,13 +199,10 @@ Restart after changing `.env`:
 docker compose up -d --force-recreate
 ```
 
-Update to the latest checked-in version:
-
-```bash
-git pull --ff-only
-docker compose build --pull
-docker compose up -d
-```
+To upgrade, download and extract the newer version's Compose bundle, copy the existing `.env` into
+the new directory, then run `docker compose pull` and `docker compose up -d` there. The Compose
+project name is fixed, so the new bundle reuses the existing `bot-data` volume. Review the changelog
+before upgrading and repeat the conversion test afterward.
 
 Stop the bot while retaining authorization and polling state:
 
@@ -255,7 +256,7 @@ Use this only when you already manage long-running Python services without Docke
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install -e ".[bot]"
+python -m pip install "onelap2strava[bot,strava] @ https://github.com/KurisuT7/onelap2strava/releases/download/v0.2.0/onelap2strava-0.2.0-py3-none-any.whl"
 export TELEGRAM_BOT_TOKEN=YOUR_TOKEN
 export TELEGRAM_ALLOWED_USER_IDS=YOUR_NUMERIC_USER_ID
 onelap2strava bot

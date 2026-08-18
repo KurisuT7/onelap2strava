@@ -10,6 +10,12 @@ RUN python -m pip wheel --wheel-dir /wheels ".[bot]"
 
 FROM python:3.13-slim
 
+ARG VERSION=0.0.0
+
+LABEL org.opencontainers.image.source="https://github.com/KurisuT7/onelap2strava" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${VERSION}"
+
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -17,7 +23,8 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     ONELAP2STRAVA_CONFIG=/data/config.toml \
     ONELAP2STRAVA_STATE=/data/bot-state.json
 
-RUN useradd --create-home --uid 10001 app
+RUN useradd --create-home --uid 10001 app \
+    && install -d -o app -g app /data
 COPY --from=builder /wheels /wheels
 RUN python -m pip install /wheels/*.whl && rm -rf /wheels
 
